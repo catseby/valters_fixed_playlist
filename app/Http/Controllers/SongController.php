@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Song;
+use App\Models\Playlist;
+
 
 class SongController extends Controller
 {
@@ -47,7 +49,8 @@ class SongController extends Controller
      */
     public function show(Song $song)
     {
-       return view('song.show', ['song' => $song]);
+        $allPlaylists = Playlist::all();
+        return view('song.show', ['song' => $song], ['allPlaylists' => $allPlaylists]);
     }
 
     /**
@@ -95,5 +98,21 @@ class SongController extends Controller
         $song->delete();
 
         return redirect('/song'); //--------------Šo vajadzēs samainīt!!!!!!
+    }
+
+    public function addPlaylist(Request $request, Song $song) {
+        if ($song->playlists->contains($request['playlist'])) {
+            return redirect()->back()->with('error', 'Playlist was already added.');
+        }
+
+        $song->playlists()->attach($request['playlist']);
+        return redirect('/song/' . $song->id)->with('success', 'Playlist added successfully!');
+    }
+
+    public function removePlaylist(Request $request, Song $song)
+    {
+        $song->playlists()->detach($request['playlist']);
+
+        return redirect('/song/' . $song->id)->with('success', 'Playlist removed successfully!');
     }
 }
